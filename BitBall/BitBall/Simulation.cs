@@ -1,17 +1,17 @@
-﻿using System;
+﻿
+using BitBall.Scorers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BitBall
 {
-    class Program
+    class Simulation
     {
         static void Main(string[] args)
         {
             //Scorer scorer = new ClassicBitBallScorer();
-            Scorer scorer = new NewScorer();
+            IScorer scorer = new ClassicScorer();
             Random random = new Random();
             List<Player> players = new List<Player>();
             players.Add(new Player("Kevin  ", scorer, random));
@@ -40,12 +40,12 @@ namespace BitBall
         public string Name { get; set; }
         public List<int> Baskets { get; set; }
         public List<int> Scores { get; set; }
-        Scorer Scorer { get; set; }
+        IScorer Scorer { get; set; }
         Random random;
 
 
 
-        public Player(string Name, Scorer Scorer, Random random)
+        public Player(string Name, IScorer Scorer, Random random)
         {
             this.Name = Name;
             Baskets = new List<int>();
@@ -118,69 +118,6 @@ namespace BitBall
             }
 
             return basketsMade;
-        }
-    }
-
-    interface Scorer
-    {
-        int GetScore(int basketsMade);
-    }
-
-    class ClassicBitBallScorer : Scorer
-    {
-        public int GetScore(int basketsMade)
-        {
-            int score = 0;
-
-            switch (basketsMade)
-            {
-                case 0:
-                    score = 0;
-                    break;
-                case 1:
-                    score = 1;
-                    break;
-                case 2:
-                    score = 2;
-                    break;
-                case 3:
-                    score = 4;
-                    break;
-                case 4:
-                    score = 8;
-                    break;
-            }
-
-            return score;
-        }
-    }
-
-    class NewScorer : Scorer
-    {
-        public int GetScore(int basketsMade)
-        {
-            int score = 0;
-
-            switch (basketsMade)
-            {
-                case 0:
-                    score = 0;
-                    break;
-                case 1:
-                    score = 2;
-                    break;
-                case 2:
-                    score = 4;
-                    break;
-                case 3:
-                    score = 5;
-                    break;
-                case 4:
-                    score = 6;
-                    break;
-            }
-
-            return score;
         }
     }
 }
