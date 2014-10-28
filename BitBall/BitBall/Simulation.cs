@@ -10,16 +10,16 @@ namespace BitBall
     {
         static void Main(string[] args)
         {
-            //Scorer scorer = new ClassicBitBallScorer();
-            IScorer scorer = new ClassicScorer();
+            IScorer scorer = new CurrentScorer();
+            Odds odds = new Odds(0.35);
             Random random = new Random();
             List<Player> players = new List<Player>();
-            players.Add(new Player("Kevin  ", scorer, random));
-            players.Add(new Player("John   ", scorer, random));
-            players.Add(new Player("Glenn  ", scorer, random));
-            players.Add(new Player("Soren  ", scorer, random));
-            players.Add(new Player("Lindsey", scorer, random));
-            players.Add(new Player("Rommel ", scorer, random));
+            players.Add(new Player("Kevin  ", scorer, random, odds));
+            players.Add(new Player("John   ", scorer, random, odds));
+            players.Add(new Player("Glenn  ", scorer, random, odds));
+            players.Add(new Player("Soren  ", scorer, random, odds));
+            players.Add(new Player("Lindsey", scorer, random, odds));
+            players.Add(new Player("Rommel ", scorer, random, odds));
 
             do
             {
@@ -30,9 +30,75 @@ namespace BitBall
                 }
                 Console.WriteLine("Winner: {0}", players.OrderByDescending(o => o.Scores.Sum()).Select(o => o.Name).FirstOrDefault());
                 Console.WriteLine("Gap: {0} - {1}", players.Min(o => o.Scores.Sum()), players.Max(o => o.Scores.Sum()));
+                Console.WriteLine(odds.PrintStats());
             } while (Console.ReadLine() != "q");
         }
+    }
 
+    class Odds
+    {
+        double chanceZero;
+        double chanceOne;
+        double chanceTwo;
+        double chanceThree;
+
+        int totalAttempts = 0;
+        double totalZeros = 0;
+        double totalOnes = 0;
+        double totalTwos = 0;
+        double totalThrees = 0;
+        double totalFours = 0;
+
+        public Odds(double chanceSuccess)
+        {
+            chanceZero = Math.Pow(1 - chanceSuccess, 4);
+            chanceOne = chanceZero + 4 * Math.Pow(1 - chanceSuccess, 3) * chanceSuccess;
+            chanceTwo = chanceOne + 6 * Math.Pow(1 - chanceSuccess, 2) * Math.Pow(chanceSuccess, 2);
+            chanceThree = chanceTwo + 4 * (1 - chanceSuccess) * Math.Pow(chanceSuccess, 3);
+        }
+
+        public int GetBasketsMade(double random)
+        {
+            int basketsMade;
+            totalAttempts++;
+            if (random <= chanceZero)
+            {
+                totalZeros++;
+                basketsMade = 0;
+            }
+            else if (random <= chanceOne)
+            {
+                totalOnes++;
+                basketsMade = 1;
+            }
+            else if (random <= chanceTwo)
+            {
+                totalTwos++;
+                basketsMade = 2;
+            }
+            else if (random <= chanceThree)
+            {
+                totalThrees++;
+                basketsMade = 3;
+            }
+            else
+            {
+                totalFours++;
+                basketsMade = 4;
+            }
+            return basketsMade;
+        }
+
+        public string PrintStats()
+        {
+            return String.Format("Total Shots: {0} | 0s: {1} | 1s: {2} | 2s: {3} | 3s: {4} | 4s: {5}",
+                                 totalAttempts,
+                                 ((double)(totalZeros / totalAttempts) * 100).ToString("00.00"),
+                                 ((double)(totalOnes / totalAttempts) * 100).ToString("00.00"),
+                                 ((double)(totalTwos / totalAttempts) * 100).ToString("00.00"),
+                                 ((double)(totalThrees / totalAttempts) * 100).ToString("00.00"),
+                                 ((double)(totalFours / totalAttempts) * 100).ToString("00.00"));
+        }
     }
 
     class Player
@@ -42,16 +108,16 @@ namespace BitBall
         public List<int> Scores { get; set; }
         IScorer Scorer { get; set; }
         Random random;
+        Odds odds;
 
-
-
-        public Player(string Name, IScorer Scorer, Random random)
+        public Player(string Name, IScorer Scorer, Random random, Odds odds)
         {
             this.Name = Name;
             Baskets = new List<int>();
             Scores = new List<int>();
             this.Scorer = Scorer;
             this.random = random;
+            this.odds = odds;
         }
 
         public void PlayWeek()
@@ -77,7 +143,7 @@ namespace BitBall
             Baskets.Clear();
             for (int i = 0; i < 4; i++)
             {
-                Baskets.Add(GetRandomBasketsMade());
+                Baskets.Add(odds.GetBasketsMade(random.NextDouble()));
             }
         }
 
@@ -88,36 +154,6 @@ namespace BitBall
             {
                 Scores.Add(Scorer.GetScore(shotsMade));
             }
-        }
-
-        private int GetRandomBasketsMade()
-        {
-            int basketsMade;
-
-            var weight = random.NextDouble();
-
-            if (weight >= 0.0 && weight < 0.2)
-            {
-                basketsMade = 0;
-            }
-            else if (weight >= 0.2 && weight < 0.5)
-            {
-                basketsMade = 1;
-            }
-            else if (weight >= 0.5 && weight < 0.8)
-            {
-                basketsMade = 2;
-            }
-            else if (weight >= 0.8 && weight < 0.95)
-            {
-                basketsMade = 3;
-            }
-            else
-            {
-                basketsMade = 4;
-            }
-
-            return basketsMade;
         }
     }
 }
