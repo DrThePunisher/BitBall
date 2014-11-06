@@ -1,7 +1,7 @@
 ﻿
 namespace BitBall.Scorers
 {
-    interface IScorer
+    public interface IScorer
     {
         int GetScore(int basketsMade);
     }

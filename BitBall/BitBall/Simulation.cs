@@ -1,4 +1,7 @@
 ﻿
+using BitBall.Helpers;
+using BitBall.Infrastructure;
+using BitBall.Players;
 using BitBall.Scorers;
 using System;
 using System.Collections.Generic;
@@ -6,7 +9,7 @@ using System.Linq;
 
 namespace BitBall
 {
-    class Simulation
+    public class Simulation
     {
         static void Main(string[] args)
         {
@@ -31,7 +34,94 @@ namespace BitBall
                 Console.WriteLine("Winner: {0}", players.OrderByDescending(o => o.Scores.Sum()).Select(o => o.Name).FirstOrDefault());
                 Console.WriteLine("Gap: {0} - {1}", players.Min(o => o.Scores.Sum()), players.Max(o => o.Scores.Sum()));
                 Console.WriteLine(odds.PrintStats());
-            } while (Console.ReadLine() != "q");
+
+                Play();
+
+            } while (Console.ReadLine() != "q" || "exit".Equals(Console.ReadLine()));
+        }
+
+        private static void Play()
+        {
+
+            int maxRoundsPerDay = 5;
+            int maxShotsPerRound = 4;
+            int playableDays = 4;
+
+            List<IPlayer> players = new List<IPlayer>();
+
+            players.Add(new RandomPlayer() { OddsModifier = 0.0, Scorecard = new Scorecard(new ClassicScorer()) });
+
+
+            for (int i = 1; i <= playableDays; i++)
+            {
+                // Setup players for the current day
+                foreach (IPlayer player in players)
+                {
+                    player.Scorecard.Days.Add(new Day() { Id = i });
+
+                    for (int j = 1; j <= maxRoundsPerDay; j++)
+                    {
+                        player.Scorecard.GetDay(i).Rounds.Add(new Round() { Id = j });
+                    }
+                }
+
+                
+                while (StillPlaying(players, i))
+                {
+                    // Shuffle players into a random order
+                    players.Shuffle(ThreadSafeRandom.ThisThreadsRandom);
+
+                    // Shoot
+                    foreach (IPlayer player in players)
+                    {
+                        // Eventually would like to simulate individual rounds
+                        if (player.WantsToShoot())
+                        {
+                            for (int k = 0; k < maxShotsPerRound; k++)
+                            {
+                                player.Scorecard.GetDay(i).GetRound(1).ShotsAttempted++;
+
+                                // Need to incorporate Odds class into this somehow...
+                                if (player.Shoot())
+                                {
+                                    player.Scorecard.GetDay(i).GetRound(1).ShotsMade++;
+                                }
+                            }
+
+                            // Only doing 1 round for now
+                            player.Scorecard.GetDay(i).GetRound(1).Accepted = true;
+                        }
+                    }
+                    
+                }
+            }
+
+            // For debugging purposes
+            int score = players.First().Scorecard.GameScore;
+        }
+
+        /// <summary>
+        /// Check if we are still playing a given day
+        /// </summary>
+        /// <param name="players"></param>
+        /// <param name="currentDayId"></param>
+        /// <returns></returns>
+        private static bool StillPlaying(List<IPlayer> players, int currentDayId)
+        {
+            bool playing = false;
+
+            // Probably can do this in a single Linq statement...
+            foreach (IPlayer player in players)
+            {
+                // Look for any player whose current day is not Done
+                if (!player.Scorecard.Days.Where(o => o.Id == currentDayId).Single().Done())
+                {
+                    playing = true;
+                    break;
+                }
+            }
+
+            return playing;
         }
     }
 

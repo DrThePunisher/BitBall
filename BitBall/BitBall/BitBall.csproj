@@ -41,6 +41,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\ThreadSafeRandom.cs" />
+    <Compile Include="Helpers\EnumerableExtensions.cs" />
+    <Compile Include="Infrastructure\Day.cs" />
+    <Compile Include="Infrastructure\Round.cs" />
+    <Compile Include="Infrastructure\Scorecard.cs" />
+    <Compile Include="Players\BasePlayer.cs" />
+    <Compile Include="Players\IPlayer.cs" />
+    <Compile Include="Players\RandomPlayer.cs" />
     <Compile Include="Scorers\CurrentScorer.cs" />
     <Compile Include="Scorers\IScorer.cs" />
     <Compile Include="Scorers\ClassicScorer.cs" />
